@@ -774,10 +774,13 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 
 	if (p->ptrace & PT_PTRACED)
 		send_sig(SIGSTOP, p, 1);
-	p->numberOfSons = 0;
-	(current->numberOfSons)++;
+	// printk("CURRENT: %d with %d+1 sons, p_pptr: %d\n", current->pid, current->numberOfSons, current->p_pptr->pid);		/* ADDED */
+	// printk("      P: %d with %d sons, p_pptr: %d\n", p->pid, p->numberOfSons, p->p_pptr->pid);							/* ADDED */
+	if (current->numberOfSons < INT_MAX){																					/* ADDED */
+		(current->numberOfSons)++; 																							/* ADDED */	
+	}																														/* ADDED */
+	(p->numberOfSons)=0;																									/* ADDED */
 	wake_up_forked_process(p);	/* do this last */
-
 	++total_forks;
 	if (clone_flags & CLONE_VFORK)
 		wait_for_completion(&vfork);
