@@ -509,6 +509,7 @@ fake_volatile:
 #endif
 		current->tux_exit();
 	}
+
 	__exit_mm(tsk);
 
 	lock_kernel();
@@ -543,7 +544,7 @@ fake_volatile:
  * happens, and the schedule returns. This way we can try again. I'm
  * not paranoid: it's just that everybody is out to get me.
  */
- 		goto fake_volatile;
+	goto fake_volatile;
 }
 
 NORET_TYPE void complete_and_exit(struct completion *comp, long code)
@@ -630,7 +631,7 @@ repeat:
 					write_unlock_irq(&tasklist_lock);
 				} else
 					release_task(p);
-				tsk->numberOfSons--;
+				(tsk->numberOfSons)--;													/* ADDED */
 				goto end_wait4;
 			default:
 				continue;
@@ -655,7 +656,6 @@ repeat:
 end_wait4:
 	current->state = TASK_RUNNING;
 	remove_wait_queue(&current->wait_chldexit,&wait);
-
 	return retval;
 }
 
