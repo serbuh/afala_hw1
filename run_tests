@@ -1,0 +1,175 @@
+clear;
+
+#compile everything
+gcc test0.c -o test0
+gcc test2.c -o test2
+gcc test3.c -o test3
+gcc test5.c -o test5
+gcc fast.c -o fast
+gcc fast_slow.c -o fast_slow
+
+#############################################################
+
+echo "-----------------------------------------------------
+#  
+# test0	->	t1 (3 sec)
+#		t2 (6 sec)
+#		t3 (9 sec)
+#
+# test0 waits every 10 sec
+#
+# expected output:
+#	first son dies <10 secs after start
+#	second son dies ~10 sec after first
+#	third son dies ~10 sec after second
+-----------------------------------------------------";
+./test0& sleep 1; pidof test0 | rev | cut -d' ' -f1 | rev | xargs ./fast; killall test0; 
+
+
+echo "press [ENTER] key for the next test...";
+read;
+clear;
+echo "-----------------------------------------------------
+#############################################################
+# test if fast ans slow counter return same value for
+# non-zombie process and make sure we dont count
+# grand-chidlren			
+#
+# test3 (inf) -> son1 (inf) -> son11 (inf)		
+#                           -> son12 (inf)
+#                           -> son13 (inf)
+#             -> son2 (inf) -> son21 (inf)	
+#                           -> son22 (inf)
+#
+# expected output:
+#	FAST: 2 , SLOW: 2
+-----------------------------------------------------";
+./test3& sleep 1; pidof test3 | rev | cut -d' ' -f1 | rev | xargs ./fast_slow; killall test3; 
+
+
+
+echo "press [ENTER] key for the next test...";
+read;
+clear;
+echo "-----------------------------------------------------
+#############################################################
+#test if fast and slow counters return different values for zombies
+#
+# test -> son1 -> son11 (inf)
+#              -> son12 (inf)
+#              -> son13 (inf)
+#
+# son1 will become a zombie after creating his sons
+#
+# expected output:
+#	FAST: 3 , SLOW: 0
+# 
+# 
+#
+-----------------------------------------------------";
+./test2& sleep 1; pidof test2 | rev | cut -d' ' -f2 | rev | xargs ./fast_slow; killall test2; 
+
+
+echo "press [ENTER] key for the next test...";
+read;
+clear;
+echo "-----------------------------------------------------
+#############################################################
+#test if fast and slow counter return the right value after
+# killing a son (killing is considered as becoming a zombie)
+#
+# test3 (inf) -> son1 (inf) -> son11 (inf)		
+#                           -> son12 (inf)
+#                           -> son13 (inf)
+#             -> son2 (inf) -> son21 (inf)	
+#                           -> son22 (inf)
+#
+# killing son1
+#
+# expected output:
+#	BEFORE: test3	FAST: 2, SLOW: 2
+	AFTER:	test3	FAST: 2, SLOW: 2
+-----------------------------------------------------";
+./test3& sleep 1; pidof test3 | rev > tmp
+echo "BEFORE:";
+cat tmp | cut -d' ' -f1 | rev | xargs ./fast_slow;
+cat tmp | cut -d' ' -f2- | rev | xargs kill -9
+sleep 1;
+echo "AFTER:";
+cat tmp | cut -d' ' -f1 | rev | xargs ./fast_slow; killall test3; 
+
+
+echo "press [ENTER] key for the next test...";
+read;
+clear;
+echo "-----------------------------------------------------
+#############################################################
+# test if fast and slow counter return the right value
+# for the KILLED process (killing is considered as becoming a zombie)
+#
+# test3 (inf) -> son1 (inf) -> son11 (inf)		
+#                           -> son12 (inf)
+#                           -> son13 (inf)
+#             -> son2 (inf) -> son21 (inf)	
+#                           -> son22 (inf)
+# killing son1
+#
+# expected output:
+#	BEFORE: son1	FAST: 3, SLOW: 3
+	AFTER:	son1	FAST: 3, SLOW: 0
+-----------------------------------------------------";
+./test3& sleep 1; pidof test3 | rev > tmp
+echo "BEFORE:";
+cat tmp | cut -d' ' -f2 | rev | xargs ./fast_slow;
+cat tmp | cut -d' ' -f2- | rev | xargs kill -9
+sleep 1;
+echo "AFTER:";
+cat tmp | cut -d' ' -f2 | rev | xargs ./fast_slow; killall test3; 
+
+
+
+echo "press [ENTER] key for the next test...";
+read;
+clear;
+echo "-----------------------------------------------------
+#############################################################
+# make sure children are not attached to the grandfather
+# after father becomes a zombie
+#
+# test5 -> father -> son1
+#                 -> son2
+#                 -> son3
+#
+# father dies first
+#
+# expected output:
+#	BEFORE:	FAST: 1, SLOW: 1
+#	AFTER:	FAST: 1, SLOW: 1
+-----------------------------------------------------";
+./test5& sleep 1; pidof test5 | rev > tmp
+echo "BEFORE:";
+cat tmp | cut -d' ' -f1 | rev | xargs ./fast_slow;
+sleep 3;
+echo "AFTER:";
+cat tmp | cut -d' ' -f1 | rev | xargs ./fast_slow; killall test5; 
+
+
+
+echo "press [ENTER] key for the next test...";
+read;
+clear;
+echo "-----------------------------------------------------
+#############################################################
+# test if fast and slow counters work for pid=0
+# both should return 0
+#
+# expected output:
+#	FAST: 1, SLOW: 1
+-----------------------------------------------------";
+
+./fast_slow 0
+
+
+########################
+# removing tests...
+rm -rf test0 test1 test2 test3 test4 test5 fast fast_slow
