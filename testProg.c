@@ -16,10 +16,10 @@ int main(){
 		printf("sons:%d\n",a);
 
 	a = fast_count_sons(1);
-	if (errno == EINVAL)
-		printf("EINVAL from init\n");
-	else if (errno == ESRCH)
-		printf("ESRCH from init\n");
+	if (errno == ESRCH)
+		printf("ESRCH from init\n");	// Changed order
+	else if (errno == EINVAL)
+		printf("EINVAL from init\n");	// Changed order
 	else
 		printf("init sons:%d\n",a);
 
